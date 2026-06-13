@@ -213,7 +213,7 @@ def get_weather(city: str) -> dict | None:
 # ══════════════════════════════════════════════════════════════════════════════
 with st.sidebar:
     st.markdown('<div class="sidebar-brand">🧭 Sanchari AI</div>', unsafe_allow_html=True)
-    st.caption("*संचारी* - Travel like a bird")
+    st.caption("*संचारी* · Traveller in Sanskrit")
     st.divider()
 
     st.subheader(t("language", lang))
@@ -242,7 +242,7 @@ with st.sidebar:
     st.divider()
 
     if st.session_state.provider_type == "cloud":
-        st.markdown("**☁️ BYOK — Bring Your Own Key**")
+        st.markdown(t("provider_cloud", lang))
         chosen_provider = st.selectbox(
             t("api_provider_label", lang),
             options=list(CLOUD_PROVIDERS.keys()),
@@ -272,28 +272,30 @@ with st.sidebar:
         st.session_state.cloud_model = chosen_model
 
         if st.session_state.api_key:
-            st.success("✅ Key saved (session only)")
+            st.success(t("key_saved", lang))
         else:
             st.warning(t("no_api_key", lang))
     else:
-        st.markdown("**🏠 Ollama Local Inference**")
-        st.caption("Run AI 100% on your machine.")
+        st.markdown(t("ollama_local_title", lang))
+        st.caption(t("ollama_machine", lang))
         ollama_url = st.text_input(t("ollama_url", lang), value=st.session_state.ollama_url)
         st.session_state.ollama_url = ollama_url
         local_models = list_ollama_models(ollama_url)
         if local_models:
             st.session_state.ollama_model = st.selectbox(
-                "Select Model", options=local_models,
+                t("ollama_select_model", lang), options=local_models,
                 index=local_models.index(st.session_state.ollama_model)
                 if st.session_state.ollama_model in local_models else 0,
             )
-            st.success(f"✅ {len(local_models)} model(s) found")
+            st.success(t("ollama_models_found", lang).format(count=len(local_models)))
         else:
-            st.session_state.ollama_model = st.text_input("Model name", value=st.session_state.ollama_model)
-            st.info("Start Ollama: `ollama serve`")
+            st.session_state.ollama_model = st.text_input(
+                t("ollama_model_name", lang), value=st.session_state.ollama_model
+            )
+            st.info(t("ollama_tip", lang))
 
     st.divider()
-    if st.button("🗑️ " + t("clear_chat", lang).replace("🗑️ ", ""), use_container_width=True):
+    if st.button(t("clear_chat", lang), use_container_width=True):
         st.session_state.messages = []
         st.rerun()
 
@@ -314,11 +316,11 @@ st.markdown(
 tab_chat, tab_planner, tab_route, tab_season, tab_weather, tab_budget, tab_booking, tab_about = st.tabs([
     t("tab_chat", lang),
     t("tab_planner", lang),
-    "🚦 Routes",
-    "📅 Season Picks",
-    "🌤️ Weather",
-    "💰 Budget Tracker",
-    "🎫 Bookings",
+    t("tab_route", lang),
+    t("tab_season", lang),
+    t("tab_weather", lang),
+    t("tab_budget", lang),
+    t("tab_booking", lang),
     t("tab_about", lang),
 ])
 
@@ -384,7 +386,7 @@ with tab_chat:
 # TAB 2 — TRIP PLANNER
 # ══════════════════════════════════════════════════════════════════════════════
 with tab_planner:
-    st.subheader("🗓️ Trip Planner")
+    st.subheader(t("planner_title", lang))
     col1, col2 = st.columns([2, 1])
 
     with col1:
@@ -392,14 +394,10 @@ with tab_planner:
             t("planner_destination", lang),
             placeholder=t("planner_dest_placeholder", lang),
         )
-        interests_options = [
-            "🏛️ History & Heritage", "🍛 Food & Cuisine", "🌿 Nature & Wildlife",
-            "🏖️ Beaches", "⛰️ Trekking & Adventure", "🛕 Temples & Spirituality",
-            "🎭 Arts & Culture", "🛍️ Shopping & Markets",
-        ]
+        interests_options = t("planner_interests_options", lang)
         interests = st.multiselect(
             t("planner_interests", lang), options=interests_options,
-            default=["🏛️ History & Heritage", "🍛 Food & Cuisine"],
+            default=interests_options[:2],
         )
 
     with col2:
@@ -410,11 +408,11 @@ with tab_planner:
             value=20000,
             format_func=lambda x: format_currency(x, lang),
         )
-        travellers = st.number_input("👥 Travellers", min_value=1, max_value=20, value=2)
+        travellers = st.number_input(t("planner_travellers", lang), min_value=1, max_value=20, value=2)
 
     if st.button(t("planner_generate", lang), type="primary", use_container_width=True):
         if not destination:
-            st.warning("Please enter a destination.")
+            st.warning(t("planner_dest_warning", lang))
         elif not ai_ready():
             st.warning(t("no_api_key", lang))
         else:
@@ -446,35 +444,35 @@ with tab_planner:
                         {"role": "user", "content": prompt},
                         {"role": "assistant", "content": full_response},
                     ])
-                    st.success("✅ Itinerary saved to chat history!")
+                    st.success(t("itinerary_saved", lang))
                 except Exception as e:
                     st.error(f"{t('error_prefix', lang)}: {e}")
 
 # ══════════════════════════════════════════════════════════════════════════════
-# TAB 3 — SMART ROUTE FINDER  (NEW)
+# TAB 3 — SMART ROUTE FINDER
 # ══════════════════════════════════════════════════════════════════════════════
 with tab_route:
-    st.subheader("🚦 Smart Route Finder")
-    st.caption("Enter your origin, destination, and budget — get the best ways to travel with pros, cons, and costs.")
+    st.subheader(t("route_title", lang))
+    st.caption(t("route_caption", lang))
 
     rc1, rc2, rc3 = st.columns(3)
     with rc1:
-        origin = st.text_input("📍 From", placeholder="e.g., Hyderabad")
+        origin = st.text_input(t("route_from", lang), placeholder=t("route_from_placeholder", lang))
     with rc2:
-        dest_route = st.text_input("🎯 To", placeholder="e.g., Goa")
+        dest_route = st.text_input(t("route_to", lang), placeholder=t("route_to_placeholder", lang))
     with rc3:
-        route_budget = st.number_input("💰 Budget (₹)", min_value=500, max_value=500000, value=5000, step=500)
+        route_budget = st.number_input(t("route_budget", lang), min_value=500, max_value=500000, value=5000, step=500)
 
     travel_prefs = st.multiselect(
-        "Travel preferences",
-        ["🚅 Fastest", "💸 Cheapest", "🛋️ Most Comfortable", "🌄 Scenic", "🚗 Flexible (own vehicle)"],
-        default=["💸 Cheapest"],
+        t("route_prefs", lang),
+        t("route_prefs_options", lang),
+        default=[t("route_prefs_options", lang)[1]],
     )
-    travellers_r = st.number_input("👥 Travellers", min_value=1, max_value=20, value=1, key="travellers_route")
+    travellers_r = st.number_input(t("planner_travellers", lang), min_value=1, max_value=20, value=1, key="travellers_route")
 
-    if st.button("🔍 Find Best Routes", type="primary", use_container_width=True, key="find_routes"):
+    if st.button(t("route_find_btn", lang), type="primary", use_container_width=True, key="find_routes"):
         if not origin or not dest_route:
-            st.warning("Please enter both origin and destination.")
+            st.warning(t("route_origin_dest_warning", lang))
         elif not ai_ready():
             st.warning(t("no_api_key", lang))
         else:
@@ -491,7 +489,7 @@ with tab_route:
                 f"End with a clear RECOMMENDATION based on the stated preferences and budget.\n"
                 f"All costs in Indian Rupees (₹)."
             )
-            with st.spinner("🔍 Analysing routes..."):
+            with st.spinner(t("route_spinner", lang)):
                 result = st.empty()
                 full = ""
                 try:
@@ -515,39 +513,40 @@ with tab_route:
                     st.error(f"{t('error_prefix', lang)}: {e}")
 
 # ══════════════════════════════════════════════════════════════════════════════
-# TAB 4 — SEASON-BASED DESTINATION RECOMMENDER  (NEW)
+# TAB 4 — SEASON-BASED DESTINATION RECOMMENDER
 # ══════════════════════════════════════════════════════════════════════════════
 with tab_season:
-    st.subheader("📅 Season-Based Destination Recommender")
-    st.caption("Tell us your travel month and budget — get personalized destination picks.")
+    st.subheader(t("season_title", lang))
+    st.caption(t("season_caption", lang))
 
     sc1, sc2 = st.columns(2)
     with sc1:
         travel_month = st.selectbox(
-            "📆 When are you planning to travel?",
+            t("season_when", lang),
             ["January", "February", "March", "April", "May", "June",
              "July", "August", "September", "October", "November", "December"],
             index=date.today().month - 1,
         )
         season_budget = st.select_slider(
-            "💰 Total Budget per person (₹)",
+            t("season_budget_label", lang),
             options=[3000, 5000, 10000, 20000, 30000, 50000, 100000, 200000],
             value=20000,
             format_func=lambda x: format_currency(x, lang),
         )
     with sc2:
-        duration_days = st.number_input("📅 Trip Duration (days)", min_value=1, max_value=30, value=4)
+        duration_days = st.number_input(t("season_duration", lang), min_value=1, max_value=30, value=4)
+        season_style_options = t("season_style_options", lang)
         travel_style = st.multiselect(
-            "🎒 Travel Style",
-            ["🏖️ Beaches & Relaxation", "🏔️ Mountains & Adventure",
-             "🛕 Culture & Heritage", "🌿 Nature & Wildlife",
-             "🎉 Festivals & Events", "🍛 Food & Culinary",
-             "💑 Romantic / Honeymoon", "👨‍👩‍👧 Family-friendly"],
-            default=["🏖️ Beaches & Relaxation"],
+            t("season_style", lang),
+            season_style_options,
+            default=[season_style_options[0]],
         )
-        origin_city = st.text_input("📍 Travelling from (optional)", placeholder="e.g., Bangalore")
+        origin_city = st.text_input(
+            t("season_from_city", lang),
+            placeholder=t("season_from_city_placeholder", lang),
+        )
 
-    if st.button("✨ Recommend Destinations", type="primary", use_container_width=True, key="season_rec"):
+    if st.button(t("season_recommend_btn", lang), type="primary", use_container_width=True, key="season_rec"):
         if not ai_ready():
             st.warning(t("no_api_key", lang))
         else:
@@ -566,7 +565,7 @@ with tab_season:
                 f"- ⚠️ Any cautions or seasonal advisories\n\n"
                 f"Also mention 1-2 hidden gems or off-beat alternatives."
             )
-            with st.spinner("✨ Finding best destinations for your season & budget..."):
+            with st.spinner(t("season_spinner", lang)):
                 result = st.empty()
                 full = ""
                 try:
@@ -590,22 +589,25 @@ with tab_season:
                     st.error(f"{t('error_prefix', lang)}: {e}")
 
 # ══════════════════════════════════════════════════════════════════════════════
-# TAB 5 — WEATHER REPORT  (NEW)
+# TAB 5 — WEATHER REPORT
 # ══════════════════════════════════════════════════════════════════════════════
 with tab_weather:
-    st.subheader("🌤️ Live Weather Report")
-    st.caption("Check current weather at any Indian city before you travel. Powered by Open-Meteo (free, no API key needed).")
+    st.subheader(t("weather_title", lang))
+    st.caption(t("weather_caption", lang))
 
     wc1, wc2 = st.columns([3, 1])
     with wc1:
-        weather_city = st.text_input("🏙️ Enter city name", placeholder="e.g., Manali, Jaisalmer, Kochi...")
+        weather_city = st.text_input(
+            t("weather_city_label", lang),
+            placeholder=t("weather_city_placeholder", lang),
+        )
     with wc2:
         st.write("")
         st.write("")
-        check_weather = st.button("🔍 Check Weather", type="primary", use_container_width=True)
+        check_weather = st.button(t("weather_check_btn", lang), type="primary", use_container_width=True)
 
     if check_weather and weather_city:
-        with st.spinner(f"Fetching weather for {weather_city}..."):
+        with st.spinner(t("weather_fetching", lang).format(city=weather_city)):
             wd = get_weather(weather_city)
 
         if wd:
@@ -615,11 +617,10 @@ with tab_weather:
             ww3.metric("💨 Wind Speed", f"{wd['wind']} km/h")
             ww4.metric("🌥️ Condition", f"{wd['emoji']} {wd['desc']}")
 
-            st.info(f"📍 Showing weather for: **{wd['city']}**")
+            st.info(t("weather_showing", lang).format(city=wd['city']))
 
-            # AI travel tip based on weather
             if ai_ready():
-                with st.expander("🧭 AI Travel Tip for this weather", expanded=True):
+                with st.expander(t("weather_ai_tip", lang), expanded=True):
                     tip_prompt = (
                         f"Current weather in {wd['city']}: {wd['temp']}°C, {wd['desc']}, "
                         f"humidity {wd['humidity']}%, wind {wd['wind']} km/h.\n"
@@ -643,27 +644,26 @@ with tab_weather:
                             tip_area.markdown(tip + "▌")
                         tip_area.markdown(tip)
                     except Exception:
-                        tip_area.info("Configure an AI provider in the sidebar for travel tips.")
+                        tip_area.info(t("weather_no_ai", lang))
             else:
-                st.info("Configure an AI provider in the sidebar to get personalized travel tips for this weather.")
+                st.info(t("weather_no_ai", lang))
         else:
-            st.error(f"Could not fetch weather for **{weather_city}**. Try a different spelling or a nearby major city.")
+            st.error(t("weather_not_found", lang).format(city=weather_city))
 
     elif check_weather and not weather_city:
-        st.warning("Please enter a city name.")
+        st.warning(t("weather_enter_city", lang))
 
 # ══════════════════════════════════════════════════════════════════════════════
-# TAB 6 — BUDGET TRACKER  (NEW)
+# TAB 6 — BUDGET TRACKER
 # ══════════════════════════════════════════════════════════════════════════════
 with tab_budget:
-    st.subheader("💰 Travel Budget Tracker")
-    st.caption("Enter your savings, log trip expenses, and get AI-powered advice on whether to proceed or pause.")
+    st.subheader(t("budget_title", lang))
+    st.caption(t("budget_caption", lang))
 
-    # ── Setup savings ──────────────────────────────────────────────────────────
     bt1, bt2 = st.columns([2, 1])
     with bt1:
         new_savings = st.number_input(
-            "🏦 Your available savings / travel fund (₹)",
+            t("budget_savings_label", lang),
             min_value=0, value=int(st.session_state.savings), step=1000,
         )
         if new_savings != st.session_state.savings:
@@ -677,17 +677,18 @@ with tab_budget:
         if st.session_state.savings > 0:
             if pct_used < 60:
                 card_cls = "budget-card"
-                status = "✅ On track"
+                status = t("budget_on_track", lang)
             elif pct_used < 85:
                 card_cls = "budget-card-warn"
-                status = "⚠️ Watch spending"
+                status = t("budget_watch", lang)
             else:
                 card_cls = "budget-card-danger"
-                status = "🚨 Over budget!"
+                status = t("budget_over", lang)
 
             st.markdown(
                 f"""<div class="{card_cls}">
                 <b>{status}</b><br>
+                {t("budget_on_track", lang).replace("✅ ", "") if pct_used < 60 else ""}
                 Spent: ₹{total_spent:,.0f} ({pct_used:.0f}%)<br>
                 Remaining: ₹{remaining:,.0f}
                 </div>""",
@@ -699,18 +700,27 @@ with tab_budget:
 
     st.divider()
 
-    # ── Add expense ────────────────────────────────────────────────────────────
-    st.markdown("**➕ Log an Expense**")
+    st.markdown(t("budget_add_expense", lang))
     ec1, ec2, ec3, ec4 = st.columns([3, 2, 2, 1])
     with ec1:
-        exp_label = st.text_input("Description", placeholder="e.g., Train ticket BLR-GOA", label_visibility="collapsed")
+        exp_label = st.text_input(
+            t("budget_exp_desc", lang),
+            placeholder=t("budget_exp_desc_placeholder", lang),
+            label_visibility="collapsed",
+        )
     with ec2:
-        exp_amount = st.number_input("Amount (₹)", min_value=0, value=0, step=100, label_visibility="collapsed")
+        exp_amount = st.number_input(
+            t("budget_exp_amount", lang), min_value=0, value=0, step=100, label_visibility="collapsed"
+        )
     with ec3:
-        exp_cat = st.selectbox("Category", ["🚆 Transport", "🏨 Stay", "🍛 Food", "🎭 Activities", "🛍️ Shopping", "🏥 Medical", "📦 Misc"], label_visibility="collapsed")
+        exp_cat = st.selectbox(
+            t("budget_exp_cat", lang),
+            t("budget_exp_cat_options", lang),
+            label_visibility="collapsed",
+        )
     with ec4:
         st.write("")
-        add_exp = st.button("Add", use_container_width=True)
+        add_exp = st.button(t("budget_add_btn", lang), use_container_width=True)
 
     if add_exp and exp_label and exp_amount > 0:
         st.session_state.expenses.append({
@@ -721,9 +731,8 @@ with tab_budget:
         })
         st.rerun()
 
-    # ── Expense table ──────────────────────────────────────────────────────────
     if st.session_state.expenses:
-        st.markdown("**📋 Expense Log**")
+        st.markdown(t("budget_expense_log", lang))
         for i, exp in enumerate(st.session_state.expenses):
             ec1, ec2, ec3, ec4 = st.columns([3, 2, 1, 1])
             ec1.write(f"{exp['category']} {exp['label']}")
@@ -733,12 +742,13 @@ with tab_budget:
                 st.session_state.expenses.pop(i)
                 st.rerun()
 
-        st.markdown(f"**Total: ₹{total_spent:,.0f}** | Remaining: ₹{remaining:,.0f}")
+        st.markdown(t("budget_total_remaining", lang).format(
+            total=f"{total_spent:,.0f}", remaining=f"{remaining:,.0f}"
+        ))
 
         st.divider()
 
-        # ── AI financial advice ────────────────────────────────────────────────
-        if st.button("🤖 Get AI Spending Advice", type="primary", use_container_width=True):
+        if st.button(t("budget_ai_advice_btn", lang), type="primary", use_container_width=True):
             if not ai_ready():
                 st.warning(t("no_api_key", lang))
             else:
@@ -757,7 +767,7 @@ with tab_budget:
                     f"4. Final verdict: Can I comfortably continue, or should I be cautious?\n"
                     f"Be direct, helpful, and practical."
                 )
-                with st.spinner("🤖 Analysing your budget..."):
+                with st.spinner(t("budget_ai_spinner", lang)):
                     advice_area = st.empty()
                     advice_text = ""
                     try:
@@ -776,28 +786,27 @@ with tab_budget:
                     except Exception as e:
                         advice_area.error(f"Error: {e}")
 
-        if st.button("🗑️ Clear All Expenses", use_container_width=True):
+        if st.button(t("budget_clear_btn", lang), use_container_width=True):
             st.session_state.expenses = []
             st.rerun()
     else:
-        st.info("No expenses logged yet. Add your first expense above to start tracking.")
+        st.info(t("budget_no_expenses", lang))
 
 # ══════════════════════════════════════════════════════════════════════════════
-# TAB 7 — BOOKINGS  (NEW)
+# TAB 7 — BOOKINGS
 # ══════════════════════════════════════════════════════════════════════════════
 with tab_booking:
-    st.subheader("🎫 Book Your Trip")
-    st.caption("Quick links to official Indian booking platforms. All links open in a new tab.")
+    st.subheader(t("booking_title", lang))
+    st.caption(t("booking_caption", lang))
 
-    # ── Train Booking ──────────────────────────────────────────────────────────
-    st.markdown("### 🚆 Train Tickets")
+    st.markdown(t("booking_train_section", lang))
     bc1, bc2, bc3 = st.columns(3)
     with bc1:
-        book_from = st.text_input("From Station", placeholder="e.g., NDLS, HYB, MAS")
+        book_from = st.text_input(t("booking_from_station", lang), placeholder="e.g., NDLS, HYB, MAS")
     with bc2:
-        book_to = st.text_input("To Station", placeholder="e.g., MMCT, SBC, ADI")
+        book_to = st.text_input(t("booking_to_station", lang), placeholder="e.g., MMCT, SBC, ADI")
     with bc3:
-        book_date = st.date_input("Journey Date", value=date.today())
+        book_date = st.date_input(t("booking_journey_date", lang), value=date.today())
 
     date_str = book_date.strftime("%Y%m%d")
     irctc_url = (
@@ -824,15 +833,14 @@ with tab_booking:
 
     st.divider()
 
-    # ── Flight Booking ─────────────────────────────────────────────────────────
-    st.markdown("### ✈️ Flights")
+    st.markdown(t("booking_flight_section", lang))
     fc1, fc2, fc3 = st.columns(3)
     with fc1:
-        flight_from = st.text_input("Origin Airport", placeholder="e.g., HYD, BLR, DEL", key="ff")
+        flight_from = st.text_input(t("booking_origin_airport", lang), placeholder="e.g., HYD, BLR, DEL", key="ff")
     with fc2:
-        flight_to = st.text_input("Dest Airport", placeholder="e.g., BOM, COK, JAI", key="ft")
+        flight_to = st.text_input(t("booking_dest_airport", lang), placeholder="e.g., BOM, COK, JAI", key="ft")
     with fc3:
-        flight_date = st.date_input("Departure Date", value=date.today(), key="fd")
+        flight_date = st.date_input(t("booking_depart_date", lang), value=date.today(), key="fd")
 
     fdate = flight_date.strftime("%Y-%m-%d")
     st.markdown(
@@ -860,15 +868,14 @@ with tab_booking:
 
     st.divider()
 
-    # ── Hotel Booking ──────────────────────────────────────────────────────────
-    st.markdown("### 🏨 Hotels")
+    st.markdown(t("booking_hotel_section", lang))
     hc1, hc2, hc3 = st.columns(3)
     with hc1:
-        hotel_city = st.text_input("City", placeholder="e.g., Goa, Manali, Agra", key="hc")
+        hotel_city = st.text_input(t("booking_hotel_city", lang), placeholder="e.g., Goa, Manali, Agra", key="hc")
     with hc2:
-        checkin = st.date_input("Check-in", value=date.today(), key="ci")
+        checkin = st.date_input(t("booking_checkin", lang), value=date.today(), key="ci")
     with hc3:
-        checkout = st.date_input("Check-out", value=date.today(), key="co")
+        checkout = st.date_input(t("booking_checkout", lang), value=date.today(), key="co")
 
     ci_str = checkin.strftime("%Y-%m-%d")
     co_str = checkout.strftime("%Y-%m-%d")
@@ -902,16 +909,15 @@ with tab_booking:
 
     st.divider()
 
-    # ── AI Booking Advice ──────────────────────────────────────────────────────
-    st.markdown("### 🤖 Not sure what to book? Ask Sanchari!")
+    st.markdown(t("booking_ai_section", lang))
     booking_q = st.text_area(
-        "Describe your trip and ask for booking advice",
-        placeholder="e.g., I want to go from Hyderabad to Coorg for 3 nights in October with ₹15,000 budget. What's the best combo of train + bus + hotel to book?",
+        t("booking_ai_question_label", lang),
+        placeholder=t("booking_ai_placeholder", lang),
         height=100,
     )
-    if st.button("💬 Get Booking Advice", type="primary", key="booking_advice"):
+    if st.button(t("booking_ai_btn", lang), type="primary", key="booking_advice"):
         if not booking_q:
-            st.warning("Please describe your trip.")
+            st.warning(t("booking_describe_warning", lang))
         elif not ai_ready():
             st.warning(t("no_api_key", lang))
         else:
@@ -924,7 +930,7 @@ with tab_booking:
                 f"- Money-saving tips and traps to avoid\n"
                 f"- Any important notes for Indian travel booking"
             )
-            with st.spinner("🤖 Getting booking advice..."):
+            with st.spinner(t("booking_ai_spinner", lang)):
                 ba = st.empty()
                 ba_text = ""
                 try:
@@ -953,16 +959,16 @@ with tab_about:
 
     col1, col2 = st.columns(2)
     with col1:
-        st.markdown("### 🌐 Supported Languages")
+        st.markdown(t("about_lang_section", lang))
         for code, name in LANGUAGES.items():
             st.markdown(f"- {name} `{code}`")
 
-        st.markdown("### 🤖 AI Providers")
+        st.markdown(t("about_ai_section", lang))
         st.markdown("**Cloud (BYOK):** Anthropic, OpenAI, Google Gemini, Groq")
         st.markdown("**Local:** Ollama (Llama 3, Mistral, Gemma 2, Phi-3…)")
 
     with col2:
-        st.markdown("### ✨ Features")
+        st.markdown(t("about_features_section", lang))
         features = [
             ("💬", "Multilingual Chat", "Ask anything about travel in India"),
             ("🗓️", "Trip Planner", "AI-generated day-by-day itineraries"),
@@ -975,7 +981,7 @@ with tab_about:
         for emoji, name, desc in features:
             st.markdown(f"{emoji} **{name}** — {desc}")
 
-        st.markdown("### 📦 Tech Stack")
+        st.markdown(t("about_tech_section", lang))
         st.markdown(
             "| Layer | Technology |\n|---|---|\n"
             "| UI | Streamlit |\n"
