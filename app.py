@@ -9,6 +9,17 @@ New features added:
   ✅ Booking Links            — quick deep-links to IRCTC, MakeMyTrip, OYO, etc.
 """
 
+import asyncio
+
+# Monkey-patch asyncio to prevent "Event loop is closed" crash in Streamlit + Python 3.13
+_original_call_soon_threadsafe = asyncio.BaseEventLoop.call_soon_threadsafe
+def _patched_call_soon_threadsafe(self, callback, *args, context=None):
+    try:
+        return _original_call_soon_threadsafe(self, callback, *args, context=context)
+    except RuntimeError:
+        pass  # Event loop is closed — ignore
+asyncio.BaseEventLoop.call_soon_threadsafe = _patched_call_soon_threadsafe
+
 import streamlit as st
 import requests
 from datetime import date
